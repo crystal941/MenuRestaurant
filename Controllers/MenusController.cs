@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MenuRestaurant.Data;
 using MenuRestaurant.Models;
+using MenuRestaurant.Interface;
 
 namespace MenuRestaurant.Controllers
 {
@@ -14,95 +15,53 @@ namespace MenuRestaurant.Controllers
     [ApiController]
     public class MenusController : ControllerBase
     {
-        private readonly DataContext _context;
+        private readonly IMenuRepository _menuRepository;
 
-        public MenusController(DataContext context)
+        public MenusController(IMenuRepository menuRepository)
         {
-            _context = context;
+            _menuRepository = menuRepository;
         }
 
         // GET: api/Menus
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Menu>>> GetMenus()
+        public ActionResult<Menu> GetMenus()
         {
-            return await _context.Menus.ToListAsync();
+            var menus = _menuRepository.GetAllMenus();
+            return Ok(menus);
         }
 
         // GET: api/Menus/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Menu>> GetMenu(Guid id)
+        public ActionResult<Menu> GetMenu(Guid id)
         {
-            var menu = await _context.Menus.FindAsync(id);
-
-            if (menu == null)
-            {
-                return NotFound();
-            }
-
-            return menu;
+            var menu = _menuRepository.GetMenuById(id);
+            return Ok(menu);
         }
 
         // PUT: api/Menus/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutMenu(Guid id, Menu menu)
+        public ActionResult<Menu> PutMenu(Guid id, Menu menu)
         {
-            if (id != menu.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(menu).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!MenuExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            var menuupdate = _menuRepository.UpdateMenuById(id, menu);
+            return Ok(menuupdate);
         }
 
         // POST: api/Menus
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Menu>> PostMenu(Menu menu)
+        public ActionResult<Menu> PostMenu(Menu menu)
         {
-            _context.Menus.Add(menu);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetMenu", new { id = menu.Id }, menu);
+            var menupost = _menuRepository.PostMenu(menu);
+            return Ok(menupost);
         }
 
         // DELETE: api/Menus/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteMenu(Guid id)
+        public ActionResult<Menu> DeleteMenu(Guid id)
         {
-            var menu = await _context.Menus.FindAsync(id);
-            if (menu == null)
-            {
-                return NotFound();
-            }
-
-            _context.Menus.Remove(menu);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool MenuExists(Guid id)
-        {
-            return _context.Menus.Any(e => e.Id == id);
+            var menu = _menuRepository.DeleteMenuById(id);
+            return Ok(menu);
         }
     }
 }
